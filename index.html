@@ -4,7 +4,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>วัด(ไฟ)ป่ะละ</title>
+<title>วัด(ไฟ)ป่ะละ</title> 
+
 <style>
   html, body {
   height: 100%;
@@ -220,10 +221,122 @@
   .bad { color:var(--bad); font-weight:bold; }
 
   .muted { color:#6b7280; font-size:0.95rem; margin-top:6px; }
+ /* ===== Celebration Effect (FIXED) ===== */
+
+/* เส้นพลุ */
+.firework-line {
+  position: fixed;
+  bottom: -20vh;
+  width: 6px;
+  height: 140vh;
+  background: linear-gradient(
+    to top,
+    transparent,
+    #ff3d81,
+    #4f46e5,
+    #22c55e
+  );
+  animation: fireworkShoot 4s ease-out forwards; /* ← 4 วินาที */
+  z-index: 1;
+  pointer-events: none;
+}
+
+.firework-left {
+  left: 10%;
+  transform: rotate(-20deg);
+}
+
+.firework-right {
+  right: 10%;
+  transform: rotate(20deg);
+}
+
+@keyframes fireworkShoot {
+  from {
+    transform: translateY(120%) scaleY(0.1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-120%) scaleY(1);
+    opacity: 0;
+  }
+}
+
+/* กระดาษสี */
+.confetti {
+  position: fixed;
+  top: -20px;
+  width: 12px;
+  height: 12px;
+  z-index: 1;
+  pointer-events: none;
+  animation: confettiFall 8s linear forwards; /* ← 8 วินาที */
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(120vh) rotate(1080deg);
+    opacity: 0;
+  }
+}
+/* ===== High usage animation ===== */
+
+/* กล่องผลลัพธ์เลื่อนไปซ้าย */
+.shift-left {
+  animation: slideLeft 0.8s ease forwards;
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-16vw); }
+}
+
+/* ปุ่มคำแนะนำ เด้งเข้าจากขวา */
+.advice-btn {
+  position: fixed;
+  right: -50vw;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 35px 40px;
+  font-size: 1.8rem;
+  border-radius: 16px;
+  background: #f59e0b;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+  animation: slideInRight 0.8s ease forwards;
+  z-index: 10;
+}
+
+@keyframes slideInRight {
+  to { right: 15vw; }
+}
+
+/* ขอบกล่องสว่างเหมือนหลอดไฟ */
+.glow-box {
+  animation: glow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 8px rgba(255, 230, 0, 0.4);
+  }
+  to {
+    box-shadow:
+      0 0 16px rgba(255, 230, 0, 0.9),
+      0 0 32px rgba(255, 200, 0, 0.8);
+  }
+}
+
+
+
 </style>
 </head>
 
 <body>
+ 
+
 <div class="grid-bg"></div>
 <div class="banner">แบบทดสอบตรวจการใช้ไฟฟ้าตามมาตรฐาน</div>
 
@@ -259,18 +372,27 @@
   <div class="result-box">
     <h2>ผลการประเมิน</h2>
     <div id="resultContent"></div>
-    <div style="margin-top:12px;">
-      <button class="btn" id="restartBtn">เริ่มใหม่</button>
-    </div>
+    <div style="margin-top:12px; display:flex; flex-direction:column; gap:12px;">
+  <a
+  href="https://www.egat.co.th/home/egat-price/#tab-52571"
+  target="_blank"
+  class="btn"
+  style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;"
+>
+  ดูอัตราค่าไฟฟ้า (EGAT)
+</a>
+
+  <button class="btn" id="restartBtn">เริ่มใหม่</button>
+</div>
   </div>
 </div>
 
 <script>
 const power = {
   "เครื่องปรับอากาศ":4000,
-  "หลอดไฟ":25,
+  "หลอดไฟ":11.9,
   "พัดลม":50,
-  "โทรทัศน์":150,
+  "โทรทัศน์":510,
   "ลำโพง":15
 };
 
@@ -297,11 +419,27 @@ const nextBtn = document.getElementById('nextBtn');
 const restartBtn = document.getElementById('restartBtn');
 const resultContent = document.getElementById('resultContent');
 
+
+
 startBtn.addEventListener('click', start);
 nextBtn.addEventListener('click', next);
-restartBtn.addEventListener('click', ()=>{
-  index = 0; answers = {}; result.style.display = 'none'; intro.style.display = 'flex';
+restartBtn.addEventListener('click', ()=> {
+  index = 0;
+  answers = {};
+
+  // ซ่อนผลลัพธ์
+  result.style.display = 'none';
+  intro.style.display = 'flex';
+
+  // ลบปุ่มคำแนะนำถ้ามี
+  const adviceBtn = document.querySelector('.advice-btn');
+  if (adviceBtn) adviceBtn.remove();
+
+  // รีเซ็ตกล่องสรุปไม่ให้สว่าง
+  const box = document.querySelector('.result-box');
+  if (box) box.classList.remove('glow-box', 'shift-left');
 });
+
 
 /* Start quiz */
 function start(){
@@ -350,19 +488,22 @@ function show(){
     wrap.innerHTML = `
       <div style="text-align:center;">
         <input type="number" id="hours" min="1" max="24" placeholder="ชั่วโมง (1-24)">
-        <div class="hours-note">กรอกชั่วโมงต่อวัน (สูงสุด 24 ชั่วโมง)</div>
+        <div class="hours-note">กรอกชั่วโมงต่อวัน (ตั้งเเต่ 1-24 ชั่วโมง)</div>
       </div>
     `;
     choices.appendChild(wrap);
 
     const hoursInput = wrap.querySelector('#hours');
-    hoursInput.addEventListener('input', ()=>{
-      const v = Number(hoursInput.value);
-      if(v > 24) hoursInput.value = 24;
-      if(v < 1) hoursInput.value = 1;
-    });
-  }
+    hoursInput.addEventListener('input', () => {
+  // ลบจุดทศนิยมออกทันที
+  hoursInput.value = hoursInput.value.replace(/\./g, '');
 
+  const v = Number(hoursInput.value);
+
+
+  if (v > 24) hoursInput.value = 24;
+});
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -394,6 +535,17 @@ function next(){
   if(index<questions.length) show();
   else calc();
 }
+// ===== ตรวจเงื่อนไขการแสดงพลุ =====
+function checkCelebrate(total){
+  const people = answers["จำนวนผู้ใช้งานห้องเรียน"];
+
+  if (people === "20-30 คน" && total <= 8000) return true;
+  if (people === "31-40 คน" && total <= 10000) return true;
+  if (people === "41-45 คน" && total <= 15000) return true;
+  if (people === "46-50 คน" && total <= 18000) return true;
+
+  return false;
+}
 
 /* Calculate result */
 function calc(){
@@ -421,16 +573,73 @@ function calc(){
         }).join('')}
       </ul>
     </div>
-  `;
-}                
-</script>
+  `; 
+  if (checkCelebrate(total)) {
+  celebrate();
+  
+}
+// ===== กรณีใช้ไฟสูง =====
+if (total > 10000) {
+  const box = document.querySelector('.result-box');
 
+  // 1️⃣ เลื่อนกล่องสรุปไปซ้าย
+  setTimeout(() => {
+    box.classList.add('shift-left');
+  }, 300);
+
+  // 2️⃣ สร้างปุ่มคำแนะนำเด้งจากขวา
+  const adviceBtn = document.createElement('a');
+  adviceBtn.href = "https://www.egat.co.th/home/infographics/";
+  adviceBtn.target = "_blank";
+  adviceBtn.className = "advice-btn";
+  adviceBtn.innerText = "คำแนะนำการใช้ไฟฟ้า";
+  document.body.appendChild(adviceBtn);
+
+  // 3️⃣ หลังคลิก → กล่องสว่างเหมือนหลอดไฟ
+  adviceBtn.addEventListener('click', () => {
+    box.classList.add('glow-box');
+  });
+}
+
+} 
+function celebrate() {
+  console.log("🎉 celebrate() called");
+
+  // เส้นพลุ
+  const left = document.createElement('div');
+  left.className = 'firework-line firework-left';
+
+  const right = document.createElement('div');
+  right.className = 'firework-line firework-right';
+
+  document.body.appendChild(left);
+  document.body.appendChild(right);
+
+  setTimeout(() => {
+    left.remove();
+    right.remove();
+  }, 4200); // นานกว่า animation นิดนึง
+
+  // กระดาษสี
+  const colors = ['#4f46e5', '#16a34a', '#f59e0b', '#dc2626', '#06b6d4'];
+
+  for (let i = 0; i < 120; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDelay = (Math.random() * 1.5) + 's';
+    document.body.appendChild(c);
+
+    setTimeout(() => c.remove(), 8500);
+  }
+}
+</script>
 </body> 
 </html>
 
 <!-- 
-เปลี้ยนค่าไฟฟ้า บรรทัด 218-222 
+เปลี้ยนค่าไฟฟ้า บรรทัด 279-283 
  
-
-์[NTS] NATISKS 
+เอาไปให้เธอให้ตั้งมากมาย
 -->
